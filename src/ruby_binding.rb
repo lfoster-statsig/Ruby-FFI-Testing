@@ -78,7 +78,22 @@ class MyStore < Statsig::DataStore
 end
 
 if $PROGRAM_NAME == __FILE__
+
+  dispatcher = Thread.new { StatsigFFI.start_dispatcher }
+
+  until StatsigFFI.dispatcher_started
+    sleep 0.001
+  end
+
   store = MyStore.new
-  result = StatsigFFI.call_get(store, "example-key")
-  warn "StatsigFFI.call_get returned: #{result.inspect}"
+
+  sync_result = StatsigFFI.call_get(store, "example-key")
+  warn "StatsigFFI.call_get returned: #{sync_result.inspect}"
+
+  StatsigFFI.call_get_delayed(store, "example-key")
+
+
+  StatsigFFI.stop_dispatcher
+  dispatcher.join
+
 end
